@@ -24,16 +24,16 @@ import { DateDiffPipe } from 'src/app/services/data.pipeline';
 
     <ion-content>
       <ion-list>
-        <ion-item-sliding *ngFor="let task of tasks$ | async">
+        <ion-item-sliding *ngFor="let task of tasks | async">
           <ion-item [routerLink]="['/tasks', task.id]">
             <ion-label>
               <h2>{{ task.title }}</h2>
               <p>{{ task.description }}</p>
               <p class="ion-text-end">
-                <small>Date de création: {{ task.createdAt | date:'short' }}</small>
+                <small>Date de création: {{ task.createdAt | date }}</small>
               </p>
             </ion-label>
-            <ion-badge slot="end">
+            <ion-badge slot="end" [color]="isTaskOverdue(task.dueDate) ? 'danger' : 'success'">
               {{ task.dueDate | dateDiff }}
             </ion-badge>
             <ion-badge slot="end">{{ task.status }}</ion-badge>
@@ -48,7 +48,7 @@ import { DateDiffPipe } from 'src/app/services/data.pipeline';
   `
 })
 export class TaskListComponent implements OnInit {
-  tasks$ = this.taskService.getTasks();
+  tasks = this.taskService.getTasks();
 
   constructor(private taskService: TaskService) {}
 
@@ -75,4 +75,8 @@ export class TaskListComponent implements OnInit {
     document.body.appendChild(alert);
     await alert.present();
   }
+  isTaskOverdue(taskDueDate: string | Date): boolean {
+    return new Date(taskDueDate) < new Date();
+  }
+  
 }

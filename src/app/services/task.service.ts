@@ -16,7 +16,6 @@ export class TaskService {
 
   private async loadTasks() {
     const storedTasks = await this.storageService.get('tasks') || [];
-    console.log(storedTasks);
     this.tasks.next(storedTasks);
     if (storedTasks.length > 0) {
       this.lastId = storedTasks[storedTasks.length - 1].id;
