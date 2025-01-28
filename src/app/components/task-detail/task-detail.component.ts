@@ -64,8 +64,9 @@ export class TaskDetailComponent  implements OnInit {
       }
     })
   }
-  exportToPdf() {
-    this.exportService.exportToPdf(this.task);
+  async exportToPdf() {
+    await this.exportService.requestStoragePermission();
+    await this.exportService.exportToPdf(this.task);
   }
 
 }

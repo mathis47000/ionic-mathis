@@ -69,23 +69,29 @@ export class TaskFormComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute
   ) {
+    // + timezone offset
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     this.taskForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3)]],
       description: [''],
       status: ['À faire', Validators.required],
-      dueDate: [new Date().toISOString(), Validators.required]
+      dueDate: [now.toISOString(), Validators.required]
     });
   }
 
   ngOnInit() {
+
     this.taskId = Number(this.route.snapshot.paramMap.get('id'));
     if (this.taskId) {
       this.isEditing = true;
       this.taskService.getTaskById(this.taskId).subscribe(task => {
         if (task) {
+          const dueDateIso = new Date(task.dueDate)
+          dueDateIso.setMinutes(dueDateIso.getMinutes() - dueDateIso.getTimezoneOffset());
           this.taskForm.patchValue({
             ...task,
-            dueDate: task.dueDate.toISOString()
+            dueDate: dueDateIso.toISOString()
           });
         }
       });
@@ -95,6 +101,7 @@ export class TaskFormComponent implements OnInit {
   onSubmit() {
     if (this.taskForm.valid) {
       if (this.isEditing && this.taskId) {
+        console.log(this.taskForm.value.dueDate);
         this.taskService.updateTask(this.taskId, this.taskForm.value);
       } else {
         this.taskService.addTask(this.taskForm.value);

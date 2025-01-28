@@ -63,7 +63,6 @@ export class TaskService {
         ...taskData,
         dueDate: taskData.dueDate ? new Date(taskData.dueDate) : new Date()
       };
-
       currentTasks[index] = updatedTask;
       this.tasks.next([...currentTasks]);
       
