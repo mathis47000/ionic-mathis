@@ -17,7 +17,6 @@ export class DateDiffPipe implements PipeTransform {
         const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
         const hours = Math.ceil(diff / (1000 * 60 * 60));
         const minutes = Math.ceil(diff / (1000 * 60));
-        console.log(days, hours, minutes);
         return days > 1 ? `${days} j` : 
         hours < 24 && hours > 1 ? `${hours} h` : 
         minutes < 60 && minutes > 0 ?`${minutes} m`: 

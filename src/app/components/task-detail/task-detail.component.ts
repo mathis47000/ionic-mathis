@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { TaskService } from 'src/app/services/task.service';
+import { ExportService } from 'src/app/services/export.service';
 import { Task } from 'src/app/models/task';
 
 @Component({
@@ -16,6 +17,13 @@ import { Task } from 'src/app/models/task';
           <ion-back-button defaultHref="/tasks"></ion-back-button>
         </ion-buttons>
         <ion-title>Détail de la tâche</ion-title>
+        <!-- Export to pdf -->
+        <ion-buttons slot="end">
+          <ion-button (click)="exportToPdf()">
+            export PDF &nbsp;
+            <ion-icon name="arrow-redo-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content>
@@ -25,8 +33,8 @@ import { Task } from 'src/app/models/task';
         </ion-card-header>
         <ion-card-content>
           <p>{{ task.description }}</p>
-          <p>Date de création: {{ task.createdAt | date:'short' }}</p>
-          <p>Date d'échéance: {{ task.dueDate | date:'short' }}</p>
+          <p>Date de création: {{ task.createdAt | date }}</p>
+          <p>Date d'échéance: {{ task.dueDate | date }}</p>
           <ion-badge slot="end">{{ task.status }}</ion-badge>
           <ion-button routerLink="/tasks/{{ task.id }}/edit" expand="block" class="ion-margin-top">
             Modifier
@@ -47,7 +55,7 @@ export class TaskDetailComponent  implements OnInit {
     createdAt: new Date(),
     dueDate: new Date()
   };
-  constructor(private taskService: TaskService, private route: ActivatedRoute) { }
+  constructor(private taskService: TaskService, private route: ActivatedRoute, private exportService: ExportService) { }
 
   ngOnInit() {
     this.taskService.getTaskById(this.id).subscribe(task => {
@@ -56,6 +64,8 @@ export class TaskDetailComponent  implements OnInit {
       }
     })
   }
-  
+  exportToPdf() {
+    this.exportService.exportToPdf(this.task);
+  }
 
 }
