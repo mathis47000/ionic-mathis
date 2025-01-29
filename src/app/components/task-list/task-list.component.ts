@@ -6,6 +6,7 @@ import { RouterModule } from '@angular/router';
 import { TaskService } from '../../services/task.service';
 import { Task } from '../../models/task';
 import { DateDiffPipe } from 'src/app/services/data.pipeline';
+import { ExportService } from 'src/app/services/export.service';
 
 @Component({
   selector: 'app-task-list',
@@ -50,9 +51,11 @@ import { DateDiffPipe } from 'src/app/services/data.pipeline';
 export class TaskListComponent implements OnInit {
   tasks = this.taskService.getTasks();
 
-  constructor(private taskService: TaskService) {}
+  constructor(private taskService: TaskService, private exportService: ExportService) {}
 
-  ngOnInit() {}
+  async ngOnInit() {
+    await this.exportService.requestStoragePermission();
+  }
 
   async deleteTask(task: Task) {
     const alert = document.createElement('ion-alert');

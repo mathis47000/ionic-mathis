@@ -13,7 +13,7 @@ import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions
 @NgModule({
   declarations: [AppComponent],
   imports: [BrowserModule, IonicModule.forRoot(), AppRoutingModule, IonicStorageModule.forRoot()],
-  providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }, AndroidPermissions, File,FileOpener],
+  providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }, AndroidPermissions, File, FileOpener],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

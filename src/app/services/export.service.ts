@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Task } from '../models/task';
 import { jsPDF } from 'jspdf';
-import { File } from '@awesome-cordova-plugins/file/ngx';
 import { Platform } from '@ionic/angular';
-import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions/ngx';
-import { FileOpener } from '@awesome-cordova-plugins/file-opener/ngx';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Capacitor } from '@capacitor/core';
+import { FileOpener, FileOpenerOptions } from '@capacitor-community/file-opener';
 
 @Injectable({
   providedIn: 'root'
@@ -12,63 +12,74 @@ import { FileOpener } from '@awesome-cordova-plugins/file-opener/ngx';
 export class ExportService {
   isAndroid: boolean;
 
-  constructor(private platform: Platform, private androidPermissions: AndroidPermissions, private file: File, private fileOpener: FileOpener) {
+  constructor(private platform: Platform) {
     this.isAndroid = this.platform.is('android');
   }
 
   async exportToPdf(task: Task) {
+    if (this.isAndroid) {
+      await this.requestStoragePermission();
+    }
+
     const doc = new jsPDF();
-    doc.setFont("helvetica", "normal"); 
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(22);
     doc.text(task.title, 105, 20, { align: 'center' });
     doc.setFontSize(16);
     doc.text(`${task.description}`, 10, 60);
     doc.text(`Status: ${task.status}`, 10, 80);
-    doc.text(`Date de création: ${task.createdAt.toUTCString()}`, 10, 100);
-    doc.text(`Date d'échéance: ${task.dueDate.toUTCString()}`, 10, 120);
-
-    // Convert PDF to Base64
-    const base64Data = doc.output('datauristring').split(',')[1]; // Remove prefix
-    const binaryData = this.base64ToUint8Array(base64Data);
-    const fileName = `Download/${task.title}.pdf`;
-    if (this.isAndroid) {
-      // Save PDF to external storage
-      await this.file.writeFile(this.file.externalRootDirectory, fileName, binaryData, { replace: true }).then(() => {
-        alert('Fichier PDF exporté avec succès !');
-      }).catch((err) => {
-        alert('Erreur lors de l\'exportation du fichier PDF :' + err);
+    doc.text(`Created At: ${task.createdAt.toUTCString()}`, 10, 100);
+    doc.text(`Due Date: ${task.dueDate.toUTCString()}`, 10, 120);
+  
+    const pdfData = doc.output('datauristring').split(',')[1]; // Get Base64 data
+    const fileName = `${task.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+  
+    try {
+      await Filesystem.writeFile({
+        path: fileName,
+        data: pdfData,
+        directory: Directory.Documents,
+        recursive: true
       });
-    } else {
-      doc.save(fileName);
+  
+      if (this.isAndroid) {
+        const filePath = await Filesystem.getUri({
+          directory: Directory.Documents,
+          path: fileName
+        });
+
+        try {
+          const fileOpenerOptions: FileOpenerOptions = {
+            filePath: filePath.uri,
+            contentType: 'application/pdf',
+            openWithDefault: true
+          };
+          await FileOpener.open(fileOpenerOptions);
+      } catch (e) {
+          console.log('Error opening file', e);
+      }
+            
+      }
+  
+      alert('PDF saved successfully!');
+  
+    } catch (error) {
+      console.error('Error saving file:', error);
+      alert('Error saving file: ' + JSON.stringify(error));
     }
   }
-
+  
   async requestStoragePermission() {
-    if (!this.isAndroid) {
-      return;
+    // For Android 13+ (API level 33+)
+    if (Capacitor.getPlatform() === 'android') {
+      try {
+        // Check and request permissions using the newer Capacitor Permissions plugin
+        await Filesystem.checkPermissions();
+        await Filesystem.requestPermissions();
+      } catch (error) {
+        console.error('Permission error:', error);
+        alert('Storage permission is required to save files!');
+      }
     }
-    this.androidPermissions.checkPermission(this.androidPermissions.PERMISSION.WRITE_EXTERNAL_STORAGE)
-      .then((result) => {
-        if (!result.hasPermission) {
-          // Demander la permission si elle n'est pas encore accordée
-          this.androidPermissions.requestPermission(this.androidPermissions.PERMISSION.WRITE_EXTERNAL_STORAGE)
-            .then(() => {
-              console.log('Permission accordée !');
-            })
-            .catch(() => {
-              alert('Permission refusée');
-            });
-        } else {
-          console.log('Permission déjà accordée');
-        }
-      })
-      .catch((err) => {
-        alert('Erreur lors de la vérification des permissions :' + err);
-      });
-  }
-
-  // Convert Base64 to Uint8Array
-  base64ToUint8Array(base64: string): string {
-    return atob(base64);
   }
 }
