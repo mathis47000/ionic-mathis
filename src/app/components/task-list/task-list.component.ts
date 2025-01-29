@@ -1,6 +1,7 @@
 // components/task-list/task-list.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
 import { TaskService } from '../../services/task.service';
@@ -9,8 +10,7 @@ import { DateDiffPipe } from 'src/app/services/data.pipeline';
 import { ExportService } from 'src/app/services/export.service';
 
 @Component({
-  selector: 'app-task-list',
-  imports: [CommonModule, IonicModule, RouterModule, DateDiffPipe],
+  imports: [CommonModule, FormsModule, IonicModule, RouterModule, DateDiffPipe],
   template: `
     <ion-header>
       <ion-toolbar>
@@ -22,10 +22,10 @@ import { ExportService } from 'src/app/services/export.service';
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
-
     <ion-content>
+      <ion-searchbar [(ngModel)]="searchTerm" placeholder="Rechercher une tâche"></ion-searchbar>
       <ion-list>
-        <ion-item-sliding *ngFor="let task of tasks | async">
+        <ion-item-sliding *ngFor="let task of filteredTasks()">
           <ion-item [routerLink]="['/tasks', task.id]">
             <ion-label>
               <h2>{{ task.title }}</h2>
@@ -49,14 +49,26 @@ import { ExportService } from 'src/app/services/export.service';
   `
 })
 export class TaskListComponent implements OnInit {
-  tasks = this.taskService.getTasks();
+  searchTerm = '';
+  tasks : Task[] = [];
 
-  constructor(private taskService: TaskService, private exportService: ExportService) {}
+  constructor(private taskService: TaskService, private exportService: ExportService) {
+    this.taskService.getTasks().subscribe(tasks => {
+      this.tasks = tasks;
+    });
+  }
 
   async ngOnInit() {
     await this.exportService.requestStoragePermission();
   }
 
+  filteredTasks(): Task[] {
+    return this.tasks.filter(task =>
+      task.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      task.description?.toLowerCase().includes(this.searchTerm.toLowerCase())
+    );
+  }
+  
   async deleteTask(task: Task) {
     const alert = document.createElement('ion-alert');
     alert.header = 'Confirmation';
