@@ -33,7 +33,7 @@ export class ExportService {
   
     const pdfData = doc.output('datauristring').split(',')[1]; // Get Base64 data
     const fileName = `${task.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-  
+
     try {
       await Filesystem.writeFile({
         path: fileName,
@@ -56,9 +56,11 @@ export class ExportService {
           };
           await FileOpener.open(fileOpenerOptions);
       } catch (e) {
-          console.log('Error opening file', e);
+          alert('Error opening file' + e);
       }
             
+      }else{
+        doc.save(fileName);
       }
   
       alert('PDF saved successfully!');
